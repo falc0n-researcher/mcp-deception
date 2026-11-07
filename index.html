@@ -102,15 +102,6 @@
   .foot{color:var(--dim);font-size:13px;padding:30px 0 20px;border-bottom:0}
   .prompt{font-family:var(--mono);font-size:12.5px;color:var(--dim);padding:0 0 60px}
   .prompt b{color:var(--orange);font-weight:400}
-  /* paste checker */
-  .curl{background:#070605;border:1px solid var(--line);border-radius:6px;padding:12px 14px;font-size:12.5px;color:var(--muted);white-space:pre-wrap;word-break:break-all;margin-bottom:12px;font-family:var(--mono)}
-  textarea#pbox{width:100%;min-height:140px;background:#070605;border:1px solid var(--line2);border-radius:6px;color:var(--cream);font-family:var(--mono);font-size:13px;padding:12px;resize:vertical;display:block}
-  textarea#pbox:focus{outline:1px solid var(--orange)}
-  #pbtn{margin-top:12px;font-family:var(--mono);cursor:pointer;border:0}
-  .pcap{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #211c15;font-size:13.5px}
-  .pcap:last-child{border-bottom:0}
-  .pcap .cap{color:var(--cream)}.pcap .cap.priv{color:var(--orange2)}
-  .pcap .cnt{color:var(--muted)}
   @media(max-width:720px){.proof-in{grid-template-columns:1fr;gap:22px}.sigs,.cards{grid-template-columns:1fr}}
 </style>
 </head>
@@ -187,23 +178,6 @@
   </div>
 </div></section>
 
-<section id="check"><div class="wrap">
-  <p class="slab">// <b>audit</b> — your own server</p>
-  <h2>Paste your tools/list</h2>
-  <p class="lead">Run one request against your own MCP endpoint, paste the response, and see what the
-    tools can reach — capabilities, privileged surface, verdict. Runs entirely in your browser;
-    nothing is sent anywhere.</p>
-  <div class="scorer">
-    <div class="in" style="padding:18px">
-      <div class="curl">curl -s -X POST "$MCP_URL" -H 'content-type: application/json' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'</div>
-      <textarea id="pbox" placeholder='paste JSON here — a tools/list response, a {"tools":[…]} object, or the raw tools array'></textarea>
-      <button id="pbtn" class="btn p">analyze</button>
-    </div>
-    <div class="out" id="pout" style="display:none"></div>
-  </div>
-</div></section>
-
 <section><div class="wrap">
   <p class="slab">// <b>scale</b></p>
   <h2>The deception is coordinated</h2>
@@ -273,44 +247,6 @@
     fired.textContent="score "+score.toFixed(2)+(hits.length?" — "+hits.join(", "):" — toggle what you saw");
   }
   opts.addEventListener('change',recompute);recompute();
-})();
-
-// paste-your-tools/list capability audit — runs entirely in the browser.
-(function(){
-  var CAPS={
-    destructive:/\b(delete|remove|drop|destroy|wipe|purge|revoke|terminate|kill|erase|truncate)\b/i,
-    shell:/\b(exec|shell|command|bash|subprocess|system|run[_-]?command|spawn|eval)\b/i,
-    sql:/\b(sql|query|database|\bdb[_-]|select|insert|cursor|mongo|redis)\b/i,
-    financial:/\b(payment|charge|invoice|transfer|refund|payout|billing|transaction|checkout|wire|withdraw)\b/i,
-    secrets:/\b(secret|token|credential|api[_-]?key|password|passwd|private[_-]?key|vault)\b/i,
-    identity:/\b(permission|role|grant|iam|policy|privilege|\bmember\b|\badmin\b|access[_-]?control)\b/i,
-    file_write:/\b(write[_-]?file|upload|put[_-]?file|create[_-]?file|mkdir|chmod|save[_-]?file)\b/i,
-    net_out:/\b(fetch|http_get|http_post|webhook|download|curl|outbound|proxy|request_url)\b/i,
-    message_send:/\b(send[_-]?email|send[_-]?message|sendmail|\bemail\b|\bsms\b|slack|notify|publish|post[_-]?message)\b/i
-  };
-  var PRIV={destructive:1,shell:1,sql:1,financial:1,secrets:1,identity:1,file_write:1};
-  var LABELS={destructive:"delete / revoke",shell:"host shell",sql:"database / sql",financial:"financial",secrets:"secrets / credentials",identity:"identity / permissions",file_write:"file write",net_out:"outbound network",message_send:"send messages"};
-  var box=document.getElementById('pbox'),btn=document.getElementById('pbtn'),out=document.getElementById('pout');
-  if(!btn)return;
-  function findTools(d){if(!d)return[];if(Array.isArray(d))return d;if(d.result&&d.result.tools)return d.result.tools;if(d.tools)return d.tools;return[];}
-  function textOf(t){var s=(t.name||'')+' '+(t.description||'');try{s+=' '+JSON.stringify(t.inputSchema||t.input_schema||{});}catch(e){}return s;}
-  function show(v,c,sub,rows){out.style.display='block';out.innerHTML='<div class="verdict" style="color:'+c+'">'+v+'</div>'+(sub?'<div class="fired">'+sub+'</div>':'')+(rows||'');}
-  function analyze(){
-    var raw=box.value.trim();if(!raw){return;}
-    var data;try{data=JSON.parse(raw);}catch(e){return show('not valid JSON','#f8771f','paste a tools/list response or a tools array');}
-    var tools=findTools(data);
-    if(!tools.length)return show('no tools found','#ded2c0','expected a tools array, {tools:[…]}, or a tools/list result');
-    var counts={},order=[];
-    tools.forEach(function(t){var s=textOf(t);for(var c in CAPS){if(CAPS[c].test(s)){if(!(c in counts)){counts[c]=0;order.push(c);}counts[c]++;}}});
-    order.sort(function(a,b){return (PRIV[b]?1:0)-(PRIV[a]?1:0)||counts[b]-counts[a];});
-    var priv=order.filter(function(c){return PRIV[c];});
-    var rows=order.map(function(c){return '<div class="pcap"><span class="cap'+(PRIV[c]?' priv':'')+'">'+LABELS[c]+'</span><span class="cnt">'+counts[c]+' tool'+(counts[c]>1?'s':'')+'</span></div>';}).join('');
-    var verdict=priv.length?'exposes '+priv.map(function(c){return LABELS[c];}).join(', '):'no privileged capabilities detected';
-    show(verdict,priv.length?'#f8771f':'#9bd4a0',tools.length+' tools · '+order.length+' capability classes',
-      (rows?'<div style="margin-top:10px">'+rows+'</div>':'')+
-      '<div class="fired" style="margin-top:10px">capabilities are inferred from tool names and descriptions — an upper bound, not a guarantee.</div>');
-  }
-  btn.addEventListener('click',analyze);
 })();
 </script>
 </body>
