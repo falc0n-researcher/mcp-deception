@@ -68,6 +68,36 @@ is for checking your own servers and cleaning up measurements — not for target
 
 ---
 
+### `//` what a run looks like
+
+Put your endpoints in [`targets.txt`](targets.txt) (one URL per line, `#` comments ignored) and run:
+
+```console
+$ python3 deception_scan.py -f targets.txt
+  ░▒▓▄▓█▓▄ █▓▒░ █▓▒░█▄
+  …
+  deception_scan · tell a real MCP server from bait · metadata-only
+
+falc0n@recon ~ $ probing 3 target(s) · metadata-only (initialize + tools/list)
+falc0n@recon ~ $ GENUINE  https://a.example/mcp  (score 0.00)
+falc0n@recon ~ $  TARPIT  https://b.example/mcp  (score 0.60)
+falc0n@recon ~ $ unreachable  https://c.example/mcp  (score 0.00, urlerror)
+
+────────────────────────────────────────────────────────────────────────────
+TARGET                        REACH   MCP    TOOLS   CORS    SCORE   VERDICT
+────────────────────────────────────────────────────────────────────────────
+b.example/mcp                 yes     no     0       yes     0.60    tarpit
+a.example/mcp                 yes     yes    7       no      0.00    genuine
+c.example/mcp                 no      no     0       no      0.00    unreachable
+────────────────────────────────────────────────────────────────────────────
+scanned 3 · genuine 1 · fake 1 · cors-open 1
+```
+
+> Prefer a recorded cast? `asciinema rec demo.cast -c "python3 deception_scan.py -f targets.txt"`,
+> then drop the player embed here.
+
+---
+
 ### `//` method, in one breath
 
 Four explainable signals: **catch-all behaviour** (answers a nonsense request), **cross-network
@@ -86,9 +116,4 @@ registry supply-chain watch, and the secure-by-default fix that closes the class
 
 ---
 
-### `//` signals
-
-[**falc0n.tech**](https://falc0n.tech) &nbsp;·&nbsp; [**X — @0xfa1c0n**](https://x.com/0xfa1c0n)
-&nbsp;·&nbsp; [**hello@falc0n.tech**](mailto:hello@falc0n.tech)
-
-<sub>`fa1c0n@recon ~ $` &nbsp; watching the internet · filed quietly · metadata-only, aggregate-only, responsible disclosure</sub>
+<sub>metadata-only, aggregate-only, responsible disclosure · no host, operator or network is named</sub>

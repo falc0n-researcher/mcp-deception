@@ -1,0 +1,6 @@
+# deception_scan targets — one MCP endpoint URL per line.
+# Lines starting with # are ignored. Check your OWN servers.
+#
+# https://your-server.example/mcp
+# https://staging.your-app.example/mcp
+# http://10.0.0.5:3333/mcp

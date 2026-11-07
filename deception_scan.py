@@ -10,7 +10,7 @@ against the open decoy signatures (see signatures.py).
     python3 deception_scan.py -f targets.txt --timeout 8 --workers 16
 
 Metadata-only, for checking your own servers and cleaning up measurements. Not for
-targeting anyone.  —  fa1c0n // field notes  ·  falc0n.tech
+targeting anyone.  —  falc0n // field notes  ·  falc0n.tech
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from urllib.error import HTTPError, URLError
 
 from signatures import Observation, evaluate
 
-# ─────────────────────────────────────────── palette (fa1c0n) ───────────────
+# ─────────────────────────────────────────── palette (falc0n) ───────────────
 ORANGE, CREAM, DIM, RED, GREEN, RESET = (
     "\033[38;2;232;80;2m", "\033[38;2;222;210;192m", "\033[38;2;111;106;97m",
     "\033[38;2;248;119;31m", "\033[38;2;155;212;160m", "\033[0m",
@@ -35,9 +35,9 @@ _PROBE_ORIGIN = "https://recon.falc0n.example"
 _INIT = {
     "jsonrpc": "2.0", "id": 1, "method": "initialize",
     "params": {"protocolVersion": "2025-06-18", "capabilities": {},
-               "clientInfo": {"name": "fa1c0n-recon", "version": "1.0"}},
+               "clientInfo": {"name": "falc0n-recon", "version": "1.0"}},
 }
-_NONSENSE = {"jsonrpc": "2.0", "id": 99, "method": "fa1c0n/are-you-a-tarpit", "params": {}}
+_NONSENSE = {"jsonrpc": "2.0", "id": 99, "method": "falc0n/are-you-a-tarpit", "params": {}}
 
 
 def banner() -> None:
@@ -59,7 +59,7 @@ class _Fmt(logging.Formatter):
 
     def format(self, r: logging.LogRecord) -> str:
         c = self._C.get(r.levelname, CREAM)
-        return f"{DIM}fa1c0n@recon{RESET} {ORANGE}~ ${RESET} {c}{r.getMessage()}{RESET}"
+        return f"{DIM}falc0n@recon{RESET} {ORANGE}~ ${RESET} {c}{r.getMessage()}{RESET}"
 
 
 log = logging.getLogger("deception")
@@ -93,7 +93,7 @@ def _post(url: str, payload: dict, timeout: float, session: str | None = None):
         "Content-Type": "application/json",
         "Accept": "application/json, text/event-stream",
         "Origin": _PROBE_ORIGIN,
-        "User-Agent": "fa1c0n-recon/1.0 (+falc0n.tech)",
+        "User-Agent": "falc0n-recon/1.0 (+falc0n.tech)",
     }
     if session:
         headers["Mcp-Session-Id"] = session
