@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Deceptive MCP Internet — fa1c0n field notes</title>
+<meta name="description" content="Most 'exposed MCP servers' are fake. Honeypots, tarpits and decoys outnumber real servers 8-to-1, and every honeypot feed misses 100% of it. Field measurement + open detection signatures.">
+<style>
+  @font-face{font-family:"Nippo";font-weight:300;font-display:swap;src:url(fonts/nippo-300.woff2) format("woff2")}
+  @font-face{font-family:"Nippo";font-weight:400;font-display:swap;src:url(fonts/nippo-400.woff2) format("woff2")}
+  @font-face{font-family:"Nippo";font-weight:500;font-display:swap;src:url(fonts/nippo-500.woff2) format("woff2")}
+  @font-face{font-family:"Nippo";font-weight:700;font-display:swap;src:url(fonts/nippo-700.woff2) format("woff2")}
+  :root{
+    --bg:#0b0a08;--panel:#100e0b;--surface:#161310;--line:#2a251e;--line2:#39322a;
+    --cream:#ded2c0;--bright:#f6f1e9;--muted:#a39a8d;--dim:#6f6a61;
+    --orange:#e85002;--orange2:#f8771f;
+    --sans:"Nippo",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;--maxw:1000px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--cream);font-family:var(--sans);font-weight:300;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  a{color:var(--orange2);text-decoration:none}a:hover{color:var(--orange)}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  .tag{font-family:var(--mono);font-size:12.5px;letter-spacing:.06em;color:var(--dim)}
+  .tag b{color:var(--orange);font-weight:400}
+  /* top */
+  .top{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(11,10,8,.86);backdrop-filter:blur(8px);z-index:10}
+  .top-in{max-width:var(--maxw);margin:0 auto;padding:13px 24px;display:flex;align-items:center;gap:12px}
+  .mark{font-family:var(--mono);font-weight:500;color:var(--bright);letter-spacing:.02em}
+  .mark .o{color:var(--orange)}
+  .chip{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);border:1px solid var(--line2);border-radius:4px;padding:5px 10px}
+  /* hero */
+  .hero-in{max-width:var(--maxw);margin:0 auto;padding:76px 24px 20px}
+  .kick{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);margin:0 0 20px}
+  h1{font-size:clamp(36px,6.4vw,66px);line-height:1.0;letter-spacing:-.02em;font-weight:500;margin:0;color:var(--bright)}
+  h1 em{font-style:normal;color:var(--orange)}
+  .sub{font-size:clamp(17px,2.3vw,21px);color:var(--muted);max-width:42ch;margin:24px 0 0}
+  .btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:34px}
+  .btn{font-family:var(--mono);font-size:14px;text-decoration:none;border-radius:6px;padding:12px 18px}
+  .btn.p{background:var(--orange);color:#140b04;font-weight:500}
+  .btn.p:hover{background:var(--orange2);color:#140b04}
+  .btn.s{color:var(--cream);border:1px solid var(--line2)}
+  .hfoot{font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:40px}
+  /* proof */
+  .proof{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel);margin-top:48px}
+  .proof-in{max-width:var(--maxw);margin:0 auto;padding:40px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+  .num{font-family:var(--mono);font-size:clamp(40px,6vw,58px);font-weight:500;letter-spacing:-.02em;line-height:1;color:var(--orange)}
+  .proof p{margin:12px 0 0;color:var(--muted);font-size:15px;max-width:27ch}
+  /* sections */
+  section{padding:56px 0;border-bottom:1px solid var(--line)}
+  .slab{font-family:var(--mono);font-size:13px;color:var(--dim);margin:0 0 10px}
+  .slab b{color:var(--orange);font-weight:400}
+  h2{font-size:clamp(23px,3.3vw,31px);letter-spacing:-.01em;margin:0 0 8px;font-weight:500;color:var(--bright)}
+  .lead{color:var(--muted);font-size:18px;max-width:64ch;margin:0 0 26px}
+  .tbl{width:100%;border-collapse:collapse;font-size:15px;background:var(--surface);border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+  .tbl th,.tbl td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line)}
+  .tbl th{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+  .tbl td.n{text-align:right;font-family:var(--mono)}
+  .tbl tr:last-child td{border-bottom:0}
+  .win{color:var(--orange2)}.lose{color:var(--dim)}
+  .sigs{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:6px}
+  .sig{border:1px solid var(--line2);border-radius:8px;padding:17px;background:var(--surface)}
+  .sig .id{font-family:var(--mono);font-size:11.5px;color:var(--orange)}
+  .sig b{display:block;margin:5px 0 4px;color:var(--bright);font-weight:500}
+  .sig p{margin:0;color:var(--muted);font-size:14px}
+  /* scorer */
+  .scorer{border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:var(--surface)}
+  .scorer .in{padding:20px 20px 6px}
+  .opt{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer;align-items:flex-start}
+  .opt:last-child{border-bottom:0}
+  .opt input{margin-top:3px;width:17px;height:17px;accent-color:var(--orange)}
+  .opt .t{color:var(--cream)}.opt .d{color:var(--dim);font-size:13px;font-family:var(--mono)}
+  .out{background:#070605;border-top:1px solid var(--line2);padding:20px;font-family:var(--mono)}
+  .verdict{font-size:20px;font-weight:500;color:var(--cream)}
+  .meter{height:10px;border-radius:999px;background:#211c15;margin:12px 0;overflow:hidden}
+  .meter i{display:block;height:100%;width:0;background:var(--orange);transition:width .2s}
+  .fired{font-size:12.5px;color:var(--muted);min-height:1.3em}
+  /* cards + held */
+  .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .card{border:1px solid var(--line2);border-radius:8px;padding:20px;background:var(--surface)}
+  .card h3{margin:0 0 6px;font-size:18px;color:var(--bright);font-weight:500}
+  .card p{color:var(--muted);margin:0 0 12px;font-size:14.5px}
+  .card .go{font-family:var(--mono);font-size:13px;color:var(--orange)}
+  .held{border:1px dashed var(--line2);border-radius:8px;padding:20px 22px;background:var(--panel)}
+  .held h3{margin:0 0 8px;color:var(--orange);font-weight:500}
+  .held ul{margin:8px 0 0;padding-left:18px;color:var(--muted)}
+  .foot{color:var(--dim);font-size:13px;padding:30px 0 20px;border-bottom:0}
+  .prompt{font-family:var(--mono);font-size:12.5px;color:var(--dim);padding:0 0 60px}
+  .prompt b{color:var(--orange);font-weight:400}
+  @media(max-width:720px){.proof-in{grid-template-columns:1fr;gap:22px}.sigs,.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <span class="mark">fa1c<span class="o">0</span>n<span style="color:var(--dim)"> // field notes</span></span>
+  <span class="chip">brief 004 &middot; preprint</span>
+</div></div>
+
+<header><div class="hero-in">
+  <p class="kick">// mcp threat intelligence</p>
+  <h1>Most &ldquo;exposed MCP<br>servers&rdquo; are <em>fake.</em></h1>
+  <p class="sub">Honeypots, catch-all tarpits and mass banner decoys outnumber real servers 8-to-1 —
+    and every honeypot feed you rely on misses 100% of them.</p>
+  <div class="btns">
+    <a class="btn p" href="#signatures">get the signatures</a>
+    <a class="btn s" href="#scorer">try the detector</a>
+  </div>
+  <p class="hfoot">field measurement · metadata-only · aggregate-only · no host or operator named</p>
+</div></header>
+
+<div class="proof"><div class="proof-in">
+  <div><div class="num">0.3%</div><p>of the 254,530 hosts flying an MCP banner complete a real handshake.</p></div>
+  <div><div class="num">8.3&times;</div><p>catch-all tarpits for every genuine server, among hosts that actually respond.</p></div>
+  <div><div class="num">0%</div><p>of those tarpits are flagged by the honeypot tag in the big scan databases.</p></div>
+</div></div>
+
+<main>
+
+<section><div class="wrap">
+  <p class="slab">// <b>the blind spot</b></p>
+  <h2>Your honeypot feeds are blind to MCP</h2>
+  <p class="lead">Take every host that behaves like an MCP catch-all tarpit — it returns a tool list for any
+    request, real or nonsense — and check it against the honeypot tag the big scan databases already ship.
+    The overlap is zero. Generic honeypot detection and MCP deception are orthogonal, so any MCP threat
+    intel built on that tag is counting ghosts and missing the decoys at once.</p>
+  <table class="tbl">
+    <thead><tr><th>on known-real and known-tarpit controls</th><th>this classifier</th><th>generic honeypot tag</th></tr></thead>
+    <tbody>
+      <tr><td>tarpits recovered (recall)</td><td class="n win">99.1%</td><td class="n lose">0.0%</td></tr>
+      <tr><td>real servers wrongly flagged</td><td class="n">0.0%</td><td class="n">0.0%</td></tr>
+      <tr><td>mean deception score — real / tarpit</td><td class="n win">0.00 / 0.75</td><td class="n">—</td></tr>
+    </tbody>
+  </table>
+</div></section>
+
+<section><div class="wrap">
+  <p class="slab">// <b>method</b></p>
+  <h2>How to tell real from fake</h2>
+  <p class="lead">Four explainable signals, no black box. A host that completes a real handshake is genuine
+    by definition and scores zero — a legitimately replicated fleet is never mistaken for a campaign.</p>
+  <div class="sigs">
+    <div class="sig"><span class="id">DECOY-TARPIT</span><b>catch-all behaviour</b><p>returns a tool list for a tool or method it cannot possibly implement.</p></div>
+    <div class="sig"><span class="id">DECOY-FINGERPRINT-REUSE</span><b>cross-network reuse</b><p>one response fingerprint replicated across many IPs and 3+ networks.</p></div>
+    <div class="sig"><span class="id">DECOY-UNVERIFIED-BANNER</span><b>banner without a handshake</b><p>advertises MCP but never completes a real initialize + tools/list.</p></div>
+    <div class="sig"><span class="id">DECOY-APPLIANCE</span><b>incoherent appliance</b><p>claims to be an MCP server and a VPN / router / camera at once.</p></div>
+  </div>
+</div></section>
+
+<section id="scorer"><div class="wrap">
+  <p class="slab">// <b>detector</b> — runs in your browser</p>
+  <h2>Score a host yourself</h2>
+  <p class="lead">The exact logic, live — nothing leaves the page. Toggle what you observed about a host and
+    watch the verdict. This is the open classifier, not a demo.</p>
+  <div class="scorer">
+    <div class="in" id="opts">
+      <label class="opt"><input type="checkbox" data-k="handshake"><span><span class="t">completed a real MCP handshake</span><br><span class="d">initialize + tools/list succeeded — this alone means genuine</span></span></label>
+      <label class="opt"><input type="checkbox" data-k="nonsense"><span><span class="t">returned a tool list for a nonsense request</span><br><span class="d">answers tools it cannot implement — catch-all tarpit</span></span></label>
+      <label class="opt"><input type="checkbox" data-k="banner"><span><span class="t">banner advertises MCP but no real handshake</span><br><span class="d">says "mcp-server/x.y" but never spoke the protocol</span></span></label>
+      <label class="opt"><input type="checkbox" data-k="appliance"><span><span class="t">banner also names an appliance</span><br><span class="d">vpn, router, camera, nas, firewall…</span></span></label>
+      <label class="opt"><input type="checkbox" data-k="reuse"><span><span class="t">same fingerprint on ≥5 IPs across ≥3 networks</span><br><span class="d">coordinated reuse across ASNs</span></span></label>
+    </div>
+    <div class="out">
+      <div class="verdict" id="verdict">inconclusive</div>
+      <div class="meter" id="meter"><i></i></div>
+      <div class="fired" id="fired">score 0.00 — toggle what you saw</div>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <p class="slab">// <b>scale</b></p>
+  <h2>The deception is coordinated</h2>
+  <p class="lead">Grouping the MCP-advertising surface by response fingerprint reveals deployments, not lone
+    hosts: 343 clusters over 99,082 hosts, and <b style="color:var(--orange2)">40 cross-network spoof
+    campaigns</b> — one fabricated banner sprayed across three or more networks with no real server among
+    them. The single largest is one fingerprint across <b style="color:var(--orange2)">82,969 IPs in 25
+    countries</b> — a mass banner-spoof, not 83,000 servers.</p>
+</div></section>
+
+<section id="signatures"><div class="wrap">
+  <p class="slab">// <b>take it with you</b></p>
+  <h2>Open detection, free</h2>
+  <p class="lead">Clean up your own measurements; tell a genuine exposed server from bait.</p>
+  <div class="cards">
+    <div class="card">
+      <h3>the decoy signatures</h3>
+      <p>four signatures as a machine-readable catalogue and a dependency-free <span class="mono">evaluate()</span> you drop into any scanner.</p>
+      <a class="go" href="https://github.com/falc0n-researcher/mcp-deception/blob/main/SIGNATURES.md">SIGNATURES.md →</a>
+    </div>
+    <div class="card">
+      <h3>the scanner</h3>
+      <p>a stdlib-only CLI: point it at an endpoint, get a metadata-only verdict and a table. no dependencies.</p>
+      <a class="go" href="https://github.com/falc0n-researcher/mcp-deception/blob/main/deception_scan.py">deception_scan.py →</a>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="held">
+    <h3>// what's held for the talk</h3>
+    <p style="margin:0;color:var(--muted)">This is one slice. The full Black Hat MEA talk (May 2027) adds the parts reserved for the stage:</p>
+    <ul>
+      <li>the exposure census — how many <em>real</em> servers are unauthenticated, and what their tools can reach;</li>
+      <li>the browser-reachable attack chain — exposure a victim triggers by opening a web page;</li>
+      <li>the continuous registry supply-chain watch — rug-pulls and capability drift over time;</li>
+      <li>the systemic fix — the secure-by-default change that closes the class at the source.</li>
+    </ul>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <p class="foot"><b style="color:var(--cream)">The Deceptive MCP Internet</b> — a fa1c0n field note. Preprint; accepted to Black Hat MEA, conference rescheduled to May 2027.
+    Metadata-only (initialize + the */list methods, never a tool call), aggregate-only, responsible disclosure. No host, operator or network is named.</p>
+  <p class="foot" style="padding-top:0">
+    <a href="https://falc0n.tech">falc0n.tech</a> &nbsp;·&nbsp; <a href="https://x.com/0xfa1c0n">@0xfa1c0n</a> &nbsp;·&nbsp; <a href="mailto:hello@falc0n.tech">hello@falc0n.tech</a></p>
+  <p class="prompt"><b>fa1c0n@recon ~ $</b> watching the internet · filed quietly</p>
+</div></footer>
+
+</main>
+
+<script>
+(function(){
+  var W={nonsense:0.60,banner:0.25,appliance:0.20,reuse:0.40};
+  var LABEL={nonsense:"DECOY-TARPIT",banner:"DECOY-UNVERIFIED-BANNER",appliance:"DECOY-APPLIANCE",reuse:"DECOY-FINGERPRINT-REUSE"};
+  var opts=document.getElementById('opts');
+  var verdict=document.getElementById('verdict'),meter=document.getElementById('meter'),fill=meter.querySelector('i'),fired=document.getElementById('fired');
+  function recompute(){
+    var on={};opts.querySelectorAll('input').forEach(function(c){on[c.dataset.k]=c.checked;});
+    if(on.handshake){verdict.textContent="genuine — handshake verified";verdict.style.color="#9bd4a0";fill.style.width="0%";fired.textContent="score 0.00 — a real handshake means genuine, whatever else is set";return;}
+    var score=0,hits=[];
+    ['nonsense','banner','appliance','reuse'].forEach(function(k){if(on[k]){score+=W[k];hits.push(LABEL[k]);}});
+    if(score>1)score=1;fill.style.width=(score*100).toFixed(0)+"%";
+    var v,c;
+    if(score>=0.5){v="likely decoy";c="#f8771f";}
+    else if(score>=0.25){v="suspect";c="#e8a05a";}
+    else if(score>0){v="weak signal";c="#ded2c0";}
+    else{v="inconclusive";c="#ded2c0";}
+    verdict.textContent=v;verdict.style.color=c;
+    fired.textContent="score "+score.toFixed(2)+(hits.length?" — "+hits.join(", "):" — toggle what you saw");
+  }
+  opts.addEventListener('change',recompute);recompute();
+})();
+</script>
+</body>
+</html>

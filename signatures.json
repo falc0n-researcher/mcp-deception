@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "signatures": [
+    {
+      "id": "DECOY-TARPIT",
+      "name": "Catch-all tarpit",
+      "severity": "high",
+      "weight": 0.6,
+      "description": "Returns a tool list for any request \u2014 including a nonsense tool or method name. A real server rejects what it does not implement; a tarpit answers everything."
+    },
+    {
+      "id": "DECOY-UNVERIFIED-BANNER",
+      "name": "MCP banner without a real handshake",
+      "severity": "medium",
+      "weight": 0.25,
+      "description": "Advertises MCP in its banner but never completes a real initialize + tools/list handshake."
+    },
+    {
+      "id": "DECOY-APPLIANCE",
+      "name": "Incoherent appliance banner",
+      "severity": "medium",
+      "weight": 0.2,
+      "description": "Claims to be an MCP server while also naming a network appliance (VPN, router, camera, NAS, \u2026). Real servers do not also advertise as hardware."
+    },
+    {
+      "id": "DECOY-FINGERPRINT-REUSE",
+      "name": "Cross-network fingerprint reuse",
+      "severity": "medium",
+      "weight": 0.4,
+      "description": "An identical response fingerprint replicated across many IPs and three or more networks (ASNs). A genuine server is near-unique; a mass decoy is not."
+    }
+  ]
+}
