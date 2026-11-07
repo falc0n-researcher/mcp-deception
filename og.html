@@ -1,0 +1,37 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+  @font-face{font-family:"Nippo";font-weight:400;src:url(fonts/nippo-400.woff2) format("woff2")}
+  @font-face{font-family:"Nippo";font-weight:500;src:url(fonts/nippo-500.woff2) format("woff2")}
+  @font-face{font-family:"Nippo";font-weight:700;src:url(fonts/nippo-700.woff2) format("woff2")}
+  *{margin:0;box-sizing:border-box}
+  html,body{width:1200px;height:630px;overflow:hidden}
+  body{background:#0b0a08;color:#ded2c0;font-family:"Nippo",sans-serif;
+       padding:68px 72px;display:flex;flex-direction:column;justify-content:space-between;
+       background-image:radial-gradient(900px 400px at 85% -10%, rgba(232,80,2,.14), transparent 60%)}
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand img{width:46px;height:46px;border-radius:10px}
+  .brand span{font-size:30px;font-weight:500;color:#f6f1e9;letter-spacing:.01em}
+  .brand .o{color:#e85002}
+  .kick{font-family:ui-monospace,monospace;font-size:19px;letter-spacing:.16em;text-transform:uppercase;color:#e85002;margin-top:6px}
+  h1{font-size:92px;line-height:.98;font-weight:500;color:#f6f1e9;letter-spacing:-.02em;max-width:19ch}
+  h1 em{font-style:normal;color:#e85002}
+  .stats{display:flex;gap:46px;margin-top:4px}
+  .stat b{display:block;font-family:ui-monospace,monospace;font-size:52px;font-weight:500;color:#e85002;line-height:1}
+  .stat span{font-size:20px;color:#a39a8d}
+  .foot{display:flex;justify-content:space-between;align-items:flex-end;font-family:ui-monospace,monospace;font-size:20px;color:#6f6a61}
+  .foot .url{color:#ded2c0}
+</style></head><body>
+  <div>
+    <div class="brand"><img src="icon.png" alt=""><span>falc<span class="o">0</span>n</span></div>
+    <div class="kick">// mcp threat intelligence</div>
+  </div>
+  <h1>Most &ldquo;exposed MCP servers&rdquo; are <em>fake.</em></h1>
+  <div class="stats">
+    <div class="stat"><b>0.3%</b><span>of MCP banners are real</span></div>
+    <div class="stat"><b>8.3&times;</b><span>tarpits per real server</span></div>
+    <div class="stat"><b>0%</b><span>caught by honeypot feeds</span></div>
+  </div>
+  <div class="foot">
+    <span>field measurement · metadata-only · aggregate-only</span>
+    <span class="url">falc0n-researcher.github.io/mcp-deception</span>
+  </div>
+</body></html>
